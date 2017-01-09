@@ -9,6 +9,7 @@ public class DesktopLauncher {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.width = 360;
 		config.height = 640;
+		config.title = "BREAKOUT";
 		new LwjglApplication(new BreakoutGame(), config);
 	}
 }

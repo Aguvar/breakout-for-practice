@@ -7,6 +7,11 @@ import com.badlogic.gdx.Screen;
  */
 public class GameoverScreen implements Screen {
 
+    private final BreakoutGame game;
+
+    public GameoverScreen(BreakoutGame game) {
+        this.game = game;
+    }
 
     @Override
     public void show() {
