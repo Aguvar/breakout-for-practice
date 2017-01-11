@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 /**
  * Created by Dingo on 09-Jan-17.
  */
-public class PlayScreen implements Screen, InputProcessor {
+public class PlayScreen implements Screen, InputProcessor, ContactListener {
     private final BreakoutGame game;
     private OrthographicCamera camera;
     private Viewport viewport;
@@ -29,14 +29,17 @@ public class PlayScreen implements Screen, InputProcessor {
     private Sprite paletteSprite;
     private Array<Array<Body>> blocks;
     private Sprite blockSprite;
+    private Array<Body> walls;
 
     //World to simulation conversion
-    private final float WtoS = 1/40f;
-    private final float StoW = 40f;
+    private final float WtoS = 1/20f;
+    private final float StoW = 20f;
     //Parameters (In world units)
     private final float paletteSpeed = 180;
     private final int blocksX = 6;
     private final int blocksY = 4;
+
+    private Vector2 flag = new Vector2(-1,-1);
 
     public PlayScreen(BreakoutGame game) {
         this.game = game;
@@ -63,14 +66,17 @@ public class PlayScreen implements Screen, InputProcessor {
 //            blocks.set(i,new Array<Body>(blocksX));
         }
 
+        walls = new Array<Body>(4);
+
         generatePhysics();
 
+        world.setContactListener(this);
         Gdx.input.setInputProcessor(this);
 
     }
 
     private void generatePhysics() {
-        world = new World(new Vector2(0,-9), true);
+        world = new World(new Vector2(0,0), true);
 
         //Generate ball
         BodyDef ballDef = new BodyDef();
@@ -84,7 +90,7 @@ public class PlayScreen implements Screen, InputProcessor {
         circleFix.shape = ballShape;
         circleFix.density = 0.5f;
         circleFix.friction = 0;
-        circleFix.restitution = 1;
+        circleFix.restitution = 1.1f;
 
         ball = world.createBody(ballDef);
         ball.createFixture(circleFix);
@@ -118,13 +124,13 @@ public class PlayScreen implements Screen, InputProcessor {
         //Ver la posicion despues
 
         PolygonShape blockShape = new PolygonShape();
-        blockShape.setAsBox(blockSprite.getWidth()*0.5f*blockSprite.getScaleX(),blockSprite.getHeight()*0.5f*blockSprite.getScaleY());
+        blockShape.setAsBox(blockSprite.getWidth()*0.5f*blockSprite.getScaleX()*WtoS,blockSprite.getHeight()*0.5f*blockSprite.getScaleY()*WtoS);
 
         FixtureDef blockFix = new FixtureDef();
         blockFix.shape = blockShape;
         blockFix.density = 1;
         blockFix.friction = 0;
-        blockFix.restitution = 1;
+        blockFix.restitution = 0.9f;
 
         for (int y = 0; y < blocksY; y++) {
             for (int x = 0; x < blocksX; x++) {
@@ -136,6 +142,44 @@ public class PlayScreen implements Screen, InputProcessor {
         }
 
         blockShape.dispose();
+
+        //Generar paredes
+        BodyDef wallDef = new BodyDef();
+        wallDef.type = BodyDef.BodyType.StaticBody;
+
+
+        EdgeShape wallShape = new EdgeShape();
+        wallShape.set(0,0,0,Gdx.graphics.getHeight()*WtoS);
+
+        FixtureDef wallFix = new FixtureDef();
+        wallFix.shape = wallShape;
+        wallFix.friction = 0;
+        wallFix.restitution = 1;
+
+        walls.add(world.createBody(wallDef));
+        walls.get(0).createFixture(wallFix);
+
+        wallShape.set(0,Gdx.graphics.getHeight()*WtoS,Gdx.graphics.getWidth()*WtoS,Gdx.graphics.getHeight()*WtoS);
+        wallFix.shape = wallShape;
+
+        walls.add(world.createBody(wallDef));
+        walls.get(1).createFixture(wallFix);
+
+        wallShape.set(Gdx.graphics.getWidth()*WtoS,Gdx.graphics.getHeight()*WtoS,Gdx.graphics.getWidth()*WtoS,0);
+        wallFix.shape = wallShape;
+
+        walls.add(world.createBody(wallDef));
+        walls.get(2).createFixture(wallFix);
+
+        wallShape.set(Gdx.graphics.getWidth()*WtoS,0,0,0);
+        wallFix.shape = wallShape;
+
+        walls.add(world.createBody(wallDef));
+        walls.get(3).createFixture(wallFix);
+
+        wallShape.dispose();
+
+        ball.setLinearVelocity(10,15);
 
         renderer = new Box2DDebugRenderer(true,false,false,true,false,false);
     }
@@ -152,6 +196,7 @@ public class PlayScreen implements Screen, InputProcessor {
 
         limitPalette();
         world.step(1/60f,6,2);
+        eliminarBloques();
 
 //        updateSpritePositions();
 
@@ -162,6 +207,13 @@ public class PlayScreen implements Screen, InputProcessor {
         game.batch.end();
 
         renderer.render(world,camera.combined);
+    }
+
+    private void eliminarBloques() {
+        if (flag.x != -1){
+            world.destroyBody(blocks.get((int)flag.y).get((int)flag.x));
+            flag = new Vector2(-1,-1);
+        }
     }
 
     private void limitPalette() {
@@ -264,5 +316,48 @@ public class PlayScreen implements Screen, InputProcessor {
     @Override
     public boolean scrolled(int amount) {
         return false;
+    }
+
+    @Override
+    public void beginContact(Contact contact) {
+        Fixture fixA = contact.getFixtureA();
+        Fixture fixB = contact.getFixtureB();
+
+        Body bodyA = fixA.getBody();
+        Body bodyB = fixB.getBody();
+
+        if (walls.contains(bodyA,false) || walls.contains(bodyB,false)){
+            //Sonido
+        }
+        if (bodyA.getUserData() instanceof Vector2){
+            flagEliminar((Vector2)bodyA.getUserData());
+        }
+        if (bodyB.getUserData() instanceof Vector2){
+            flagEliminar((Vector2)bodyB.getUserData());
+        }
+        if (bodyA.equals(palette) || bodyB.equals(palette)){
+            //Otro sonido
+        }
+
+    }
+
+    private void flagEliminar(Vector2 blockLocation) {
+        //Soniditos y efectos
+        flag = blockLocation;
+    }
+
+    @Override
+    public void endContact(Contact contact) {
+
+    }
+
+    @Override
+    public void preSolve(Contact contact, Manifold oldManifold) {
+
+    }
+
+    @Override
+    public void postSolve(Contact contact, ContactImpulse impulse) {
+
     }
 }
