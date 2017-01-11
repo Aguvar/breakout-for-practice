@@ -19,32 +19,36 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  * Created by Dingo on 09-Jan-17.
  */
 public class StartScreen implements Screen, InputProcessor {
+
     private final BreakoutGame game;
+
     private Sprite playBtnSprite;
     private Sprite scoreBtnSprite;
     private OrthographicCamera camera;
-//    private Stage stage;
-//    private Button playBtn;
-//    private Button highBtn;
     private GlyphLayout layout;
     private BitmapFont titleFont;
     private Viewport viewport;
 
     public StartScreen(BreakoutGame game) {
         this.game = game;
-        playBtnSprite = new Sprite(new Texture(Gdx.files.internal("play_panel.png")));
-        scoreBtnSprite = new Sprite(new Texture(Gdx.files.internal("score_panel.png")));
+
         this.titleFont = new BitmapFont(Gdx.files.local("StartFont.fnt"));
+        playBtnSprite = new Sprite(new Texture(Gdx.files.internal("play_panel.png")));
+        playBtnSprite.setPosition(Gdx.graphics.getWidth()*0.5f- playBtnSprite.getRegionWidth()*0.5f,240);
+        playBtnSprite.setBounds(playBtnSprite.getX(), playBtnSprite.getY(), playBtnSprite.getWidth(), playBtnSprite.getHeight());
+
+        scoreBtnSprite = new Sprite(new Texture(Gdx.files.internal("score_panel.png")));
+        scoreBtnSprite.setPosition(Gdx.graphics.getWidth()*0.5f- scoreBtnSprite.getRegionWidth()*0.5f,80);
+        scoreBtnSprite.setBounds(scoreBtnSprite.getX(), scoreBtnSprite.getY(), scoreBtnSprite.getWidth(), scoreBtnSprite.getHeight());
+
         layout = new GlyphLayout();
-        layout.setText(titleFont,"COSO");
+        layout.setText(titleFont,"CCCCCCCC");
+
         camera = new OrthographicCamera();
         camera.position.x = Gdx.graphics.getWidth()*0.5f;
         camera.position.y = Gdx.graphics.getHeight()*0.5f;
+
         viewport = new StretchViewport(360,640,camera);
-        playBtnSprite.setPosition(Gdx.graphics.getWidth()*0.5f- playBtnSprite.getRegionWidth()*0.5f,240);
-        playBtnSprite.setBounds(playBtnSprite.getX(), playBtnSprite.getY(), playBtnSprite.getWidth(), playBtnSprite.getHeight());
-        scoreBtnSprite.setPosition(Gdx.graphics.getWidth()*0.5f- scoreBtnSprite.getRegionWidth()*0.5f,80);
-        scoreBtnSprite.setBounds(scoreBtnSprite.getX(), scoreBtnSprite.getY(), scoreBtnSprite.getWidth(), scoreBtnSprite.getHeight());
 
         Gdx.input.setInputProcessor(this);
     }
@@ -58,18 +62,15 @@ public class StartScreen implements Screen, InputProcessor {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         camera.update();
         game.batch.setProjectionMatrix(camera.combined);
+
         game.batch.begin();
         playBtnSprite.draw(game.batch);
         scoreBtnSprite.draw(game.batch);
-        titleFont.draw(game.batch,"COSO",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.9f);
+        titleFont.draw(game.batch,"CCCCCCCC",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.9f);
         game.batch.end();
-
-//        if (scoreBtnSprite.getBoundingRectangle()){
-//            game.setScreen(new PlayScreen(game));
-//            dispose();
-//        }
     }
 
     @Override
@@ -99,8 +100,7 @@ public class StartScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        camera.zoom =- 0.5f;
-        return true;
+        return false;
     }
 
     @Override
