@@ -27,12 +27,16 @@ public class PlayScreen implements Screen, InputProcessor {
     private Sprite ballSprite;
     private Body palette;
     private Sprite paletteSprite;
+    private Array<Array<Body>> blocks;
+    private Sprite blockSprite;
 
     //World to simulation conversion
     private final float WtoS = 1/40f;
     private final float StoW = 40f;
     //Parameters (In world units)
     private final float paletteSpeed = 180;
+    private final int blocksX = 6;
+    private final int blocksY = 4;
 
     public PlayScreen(BreakoutGame game) {
         this.game = game;
@@ -48,6 +52,16 @@ public class PlayScreen implements Screen, InputProcessor {
         ballSprite.setScale(0.5f);
 
         paletteSprite = new Sprite(new Texture(Gdx.files.local("breakoutPalette.png")));
+
+        blockSprite = new Sprite(new Texture(Gdx.files.local("breakoutBlock.png")));
+
+        //Create matrix
+        blocks = new Array<Array<Body>>(blocksY);
+        for (int i = 0; i < blocksY; i++) {
+            blocks.add(new Array<Body>(blocksX));
+//            blocks.items[i] = new Array<Body>(blocksX);
+//            blocks.set(i,new Array<Body>(blocksX));
+        }
 
         generatePhysics();
 
@@ -99,6 +113,29 @@ public class PlayScreen implements Screen, InputProcessor {
         paletteShape.dispose();
 
         //Generate blocks
+        BodyDef blockDef = new BodyDef();
+        blockDef.type = BodyDef.BodyType.StaticBody;
+        //Ver la posicion despues
+
+        PolygonShape blockShape = new PolygonShape();
+        blockShape.setAsBox(blockSprite.getWidth()*0.5f*blockSprite.getScaleX(),blockSprite.getHeight()*0.5f*blockSprite.getScaleY());
+
+        FixtureDef blockFix = new FixtureDef();
+        blockFix.shape = blockShape;
+        blockFix.density = 1;
+        blockFix.friction = 0;
+        blockFix.restitution = 1;
+
+        for (int y = 0; y < blocksY; y++) {
+            for (int x = 0; x < blocksX; x++) {
+                blockDef.position.set(Gdx.graphics.getWidth()*0.3f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , Gdx.graphics.getHeight()*0.8f*WtoS + (blockSprite.getHeight() + 5)*y*WtoS);
+                blocks.get(y).add(world.createBody(blockDef));
+                blocks.get(y).get(x).createFixture(blockFix);
+                blocks.get(y).get(x).setUserData(new Vector2(x,y));
+            }
+        }
+
+        blockShape.dispose();
 
         renderer = new Box2DDebugRenderer(true,false,false,true,false,false);
     }
@@ -141,7 +178,15 @@ public class PlayScreen implements Screen, InputProcessor {
                 ((Sprite) (body.getUserData())).setPosition(body.getPosition().x*StoW - ((Sprite) (body.getUserData())).getWidth()*0.5f,body.getPosition().y*StoW - ((Sprite) (body.getUserData())).getHeight()*0.5f);
                 ((Sprite) (body.getUserData())).draw(game.batch);
             }
+            else if (body.getUserData() instanceof Vector2){
+//                blockDef.position.set(Gdx.graphics.getWidth()*0.3f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , Gdx.graphics.getHeight()*0.8f*WtoS + (blockSprite.getHeight() + 5)*y*WtoS);
+                float x = ((Vector2) body.getUserData()).x;
+                float y = ((Vector2) body.getUserData()).y;
+                blockSprite.setPosition(blocks.get((int)y).get((int)x).getPosition().x*StoW - blockSprite.getWidth()*0.5f,blocks.get((int)y).get((int)x).getPosition().y*StoW - blockSprite.getHeight()*0.5f);
+                blockSprite.draw(game.batch);
+            }
         }
+
     }
 
     @Override
