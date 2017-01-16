@@ -10,12 +10,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class BreakoutGame extends Game {
 	SpriteBatch batch;
-	BitmapFont startFont;
+	BitmapFont gameFont;
 
 	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
+		gameFont = new BitmapFont(Gdx.files.internal("gameFont.fnt"));
 		this.setScreen(new StartScreen(this));
 	}
 
