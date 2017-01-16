@@ -92,7 +92,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         world.setContactListener(this);
         Gdx.input.setInputProcessor(this);
 
-        lives = 3;
+        lives = 0;
         score = 0;
 
         layout = new GlyphLayout();
@@ -239,9 +239,15 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
         renderer.render(world,camera.combined);
 
-
+        checkOutOfBounds();
         if (deathFlag){
             killBall();
+        }
+    }
+
+    private void checkOutOfBounds() {
+        if(ballSprite.getX() < -100 || ballSprite.getX() > 500 || ballSprite.getY() > 800 || ballSprite.getY() < -100){
+            deathFlag = true;
         }
     }
 
