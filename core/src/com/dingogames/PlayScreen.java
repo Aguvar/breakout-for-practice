@@ -4,11 +4,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -30,16 +34,28 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
     private Array<Array<Body>> blocks;
     private Sprite blockSprite;
     private Array<Body> walls;
+    private Body deathWall;
+    private Sound wallSound;
+    private Sound paletteSound;
+    private Sound blockSound;
+    private Sound gameOverSound;
+    private int lives;
+    private int score;
+    private GlyphLayout layout;
 
     //World to simulation conversion
-    private final float WtoS = 1/20f;
-    private final float StoW = 20f;
+    private final float WtoS = 1/10f;
+    private final float StoW = 10f;
     //Parameters (In world units)
-    private final float paletteSpeed = 180;
+    private final float paletteSpeed = 300;
     private final int blocksX = 6;
-    private final int blocksY = 4;
+    private final int blocksY = 6;
+
+    private float worldStep = 1/60f;
 
     private Vector2 flag = new Vector2(-1,-1);
+    private boolean deathFlag = false;
+    private boolean startFlag = true;
 
     public PlayScreen(BreakoutGame game) {
         this.game = game;
@@ -62,21 +78,29 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         blocks = new Array<Array<Body>>(blocksY);
         for (int i = 0; i < blocksY; i++) {
             blocks.add(new Array<Body>(blocksX));
-//            blocks.items[i] = new Array<Body>(blocksX);
-//            blocks.set(i,new Array<Body>(blocksX));
         }
 
         walls = new Array<Body>(4);
 
         generatePhysics();
 
+        wallSound = Gdx.audio.newSound(Gdx.files.internal("BWall.wav"));
+        paletteSound = Gdx.audio.newSound(Gdx.files.internal("BPalette.wav"));
+        blockSound = Gdx.audio.newSound(Gdx.files.internal("BBlock.wav"));
+        gameOverSound = Gdx.audio.newSound(Gdx.files.internal("BGameOver2.wav"));
+
         world.setContactListener(this);
         Gdx.input.setInputProcessor(this);
+
+        lives = 3;
+        score = 0;
+
+        layout = new GlyphLayout();
 
     }
 
     private void generatePhysics() {
-        world = new World(new Vector2(0,0), true);
+        world = new World(new Vector2(0,-1), true);
 
         //Generate ball
         BodyDef ballDef = new BodyDef();
@@ -134,7 +158,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
         for (int y = 0; y < blocksY; y++) {
             for (int x = 0; x < blocksX; x++) {
-                blockDef.position.set(Gdx.graphics.getWidth()*0.3f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , Gdx.graphics.getHeight()*0.8f*WtoS + (blockSprite.getHeight() + 5)*y*WtoS);
+                blockDef.position.set(Gdx.graphics.getWidth()*0.2f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , Gdx.graphics.getHeight()*0.9f*WtoS + -(blockSprite.getHeight() + 5)*y*WtoS);
                 blocks.get(y).add(world.createBody(blockDef));
                 blocks.get(y).get(x).createFixture(blockFix);
                 blocks.get(y).get(x).setUserData(new Vector2(x,y));
@@ -174,12 +198,12 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         wallShape.set(Gdx.graphics.getWidth()*WtoS,0,0,0);
         wallFix.shape = wallShape;
 
-        walls.add(world.createBody(wallDef));
-        walls.get(3).createFixture(wallFix);
+        deathWall = world.createBody(wallDef);
+        deathWall.createFixture(wallFix);
 
         wallShape.dispose();
 
-        ball.setLinearVelocity(10,15);
+        ball.setLinearVelocity(0,0);
 
         renderer = new Box2DDebugRenderer(true,false,false,true,false,false);
     }
@@ -195,8 +219,9 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         limitPalette();
-        world.step(1/60f,6,2);
+        world.step(worldStep,6,2);
         eliminarBloques();
+
 
 //        updateSpritePositions();
 
@@ -204,9 +229,49 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         game.batch.setProjectionMatrix(camera.combined);
         game.batch.begin();
         drawBodies();
+        layout.setText(game.gameFont,"Score: " + Integer.toString(score));
+        game.gameFont.draw(game.batch,"Lives: " + Integer.toString(lives), 20, Gdx.graphics.getHeight()-20);
+        game.gameFont.draw(game.batch,"Score: " + Integer.toString(score), 360 - layout.width - 20, Gdx.graphics.getHeight()-20);
+        if (startFlag) {
+            startRound();
+        }
         game.batch.end();
 
         renderer.render(world,camera.combined);
+
+
+        if (deathFlag){
+            killBall();
+        }
+    }
+
+    private void startRound() {
+        if (worldStep != 0){
+            ball.setTransform(Gdx.graphics.getWidth()*0.5f*WtoS,Gdx.graphics.getHeight()*0.5f*WtoS,0);
+            ball.setLinearVelocity(0,0);
+            palette.setTransform(Gdx.graphics.getWidth()*0.5f*WtoS,30*WtoS,0);
+            palette.setLinearVelocity(0,0);
+            worldStep = 0;
+
+        }
+        layout.setText(game.gameFont, "TOUCH!");
+        game.gameFont.draw(game.batch,"TOUCH!",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.5f-30);
+        if (Gdx.input.isTouched()){
+            worldStep = 1/60f;
+            ball.setLinearVelocity(MathUtils.random(-10,10),15);
+            startFlag = false;
+        }
+    }
+
+    private void killBall() {
+        gameOverSound.play();
+        if (lives == 0){
+            game.setScreen(new GameoverScreen(game, score));
+            dispose();
+        }
+        deathFlag = false;
+        lives--;
+        startFlag = true;
     }
 
     private void eliminarBloques() {
@@ -264,6 +329,9 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
     @Override
     public void dispose() {
         world.dispose();
+        blockSound.dispose();
+        paletteSound.dispose();
+        wallSound.dispose();
     }
 
     @Override
@@ -295,12 +363,32 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        return false;
+        if (pointer == 0) {
+            Vector3 touch = new Vector3(screenX,screenY,0);
+            camera.unproject(touch);
+            if (touch.x > Gdx.graphics.getWidth()*0.5f){
+                palette.setLinearVelocity(paletteSpeed*WtoS,0);
+            }else if (touch.x < Gdx.graphics.getWidth()*0.5f){
+                palette.setLinearVelocity(-paletteSpeed*WtoS,0);
+            }
+        }
+
+
+        return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
+        Vector3 touch = new Vector3(screenX,screenY,0);
+        camera.unproject(touch);
+        if (touch.x > Gdx.graphics.getWidth()*0.5f && palette.getLinearVelocity().x > 0){
+            palette.setLinearVelocity(0,0);
+        }else if (touch.x < Gdx.graphics.getWidth()*0.5f && palette.getLinearVelocity().x < 0){
+            palette.setLinearVelocity(0,0);
+        }
+
+
+        return true;
     }
 
     @Override
@@ -327,7 +415,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         Body bodyB = fixB.getBody();
 
         if (walls.contains(bodyA,false) || walls.contains(bodyB,false)){
-            //Sonido
+            wallSound.play();
         }
         if (bodyA.getUserData() instanceof Vector2){
             flagEliminar((Vector2)bodyA.getUserData());
@@ -337,12 +425,19 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         }
         if (bodyA.equals(palette) || bodyB.equals(palette)){
             //Otro sonido
+            paletteSound.play();
+        }
+        if (bodyA.equals(deathWall) || bodyB.equals(deathWall)){
+            //Play death sound
+            deathFlag = true;
         }
 
     }
 
     private void flagEliminar(Vector2 blockLocation) {
         //Soniditos y efectos
+        blockSound.play();
+        score += Math.abs(ball.getLinearVelocity().x) + Math.abs(ball.getLinearVelocity().y);
         flag = blockLocation;
     }
 
