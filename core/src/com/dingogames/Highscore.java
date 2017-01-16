@@ -12,6 +12,9 @@ public class Highscore {
         this.workArray = workArray;
     }
 
+    public Highscore() {
+    }
+
     public void add(String value) {
         this.workArray.add(value);
     }

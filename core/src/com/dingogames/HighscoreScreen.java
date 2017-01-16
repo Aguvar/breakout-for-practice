@@ -16,13 +16,14 @@ public class HighscoreScreen implements Screen {
     private final BreakoutGame game;
 
     public HighscoreScreen(BreakoutGame game) {
+        Json json = new Json();
         this.game = game;
         if (Gdx.files.local("scores.json").exists()){
-            Json json = new Json();
             scores = json.fromJson( Highscore.class ,Gdx.files.internal("scores.json"));
         } else{
-            scores = new Highscore( new Array<String>(true, 10));
+            scores = new Highscore( new Array<String>(true, 20));
             scores.add("60 - AUG");
+            Gdx.files.local("scores.json").writeString(json.toJson(scores),false);
         }
     }
 
