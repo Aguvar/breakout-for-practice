@@ -1,52 +1,55 @@
 package com.dingogames;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
  * Created by Dingo on 09-Jan-17.
  */
-public class HighscoreScreen implements Screen {
+public class HighscoreScreen implements Screen, InputProcessor {
 
-    private final Highscore scores;
+
     private final BreakoutGame game;
 
     private Viewport viewport;
     private OrthographicCamera camera;
 
-    private BitmapFont titleFont;
-    private GlyphLayout titleLayout;
+    private BitmapFont scoreFont;
+    private GlyphLayout scoreTitleLayout;
     private GlyphLayout scoreLayout;
 
+    private Sprite backSprite;
+
     public HighscoreScreen(BreakoutGame game) {
-        Json json = new Json();
+
         this.game = game;
-        if (Gdx.files.local("scores.json").exists()){
-            scores = json.fromJson( Highscore.class ,Gdx.files.internal("scores.json"));
-        } else{
-            scores = new Highscore( new Array<String>(true, 20));
-            scores.add("60 - AUG");
-            Gdx.files.local("scores.json").writeString(json.toJson(scores),false);
-        }
+
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(360,640,camera);
         camera.position.set(Gdx.graphics.getWidth()*0.5f,Gdx.graphics.getHeight()*0.5f,0);
 
 
-        titleFont = new BitmapFont(Gdx.files.internal("overFont.fnt"));
-        titleLayout = new GlyphLayout(titleFont,"HIGH\nSCORES");
+        scoreFont = new BitmapFont(Gdx.files.internal("scoreFont.fnt"));
+        scoreTitleLayout = new GlyphLayout(scoreFont,"HIGH SCORES");
 
         scoreLayout = new GlyphLayout(game.gameFont,"EXAMPLE SCORE");
+
+        backSprite = new Sprite(new Texture(Gdx.files.internal("back_arrow.png")));
+        backSprite.setPosition(20,20);
+
+        Gdx.input.setInputProcessor(this);
     }
 
     @Override
@@ -63,14 +66,20 @@ public class HighscoreScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-        titleFont.draw(game.batch,titleLayout,180-titleLayout.width*0.5f,640-20);
+        scoreFont.draw(game.batch, scoreTitleLayout,180- scoreTitleLayout.width*0.5f,640-20);
         printScores();
+        backSprite.draw(game.batch);
         game.batch.end();
     }
 
     private void printScores() {
-        for (int x = 0; x < scores.quantity(); x++) {
-            game.gameFont.draw(game.batch,Integer.toString(x+1) + ") " + scores.workArray.get(x),30,640*0.6f-(scoreLayout.height + 5)*x);
+        String aux = "";
+        Integer auxKey = 0;
+        Array<Integer> keys = game.scores.getKeys();
+        for (int x = keys.size-1; x >= 0; x--) {
+            auxKey = keys.get(x);
+            aux = auxKey.toString() + " - " + game.scores.getScore(auxKey);
+            game.gameFont.draw(game.batch, aux,30,640*0.9f-(scoreLayout.height + 5)*(keys.size-1-x));
         }
     }
 
@@ -97,5 +106,53 @@ public class HighscoreScreen implements Screen {
     @Override
     public void dispose() {
 
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyTyped(char character) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        Vector3 touch = new Vector3(screenX,screenY,0);
+        camera.unproject(touch);
+        if (backSprite.getBoundingRectangle().contains(touch.x,touch.y)){
+            game.touchSound.play();
+            game.setScreen(new StartScreen(game));
+            dispose();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    @Override
+    public boolean scrolled(int amount) {
+        return false;
     }
 }

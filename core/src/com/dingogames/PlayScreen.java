@@ -92,7 +92,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         world.setContactListener(this);
         Gdx.input.setInputProcessor(this);
 
-        lives = 0;
+        lives = 3;
         score = 0;
 
         layout = new GlyphLayout();

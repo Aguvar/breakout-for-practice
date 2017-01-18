@@ -30,7 +30,7 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
     private GlyphLayout layout;
     private GlyphLayout scoreLayout;
 
-    private Highscore highScores;
+
     private Sprite submitSprite;
     private Sprite menuSprite;
     private boolean submitFlag;
@@ -38,13 +38,13 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
     public GameoverScreen(BreakoutGame game, int score) {
         this.game = game;
         this.score = score;
-        Json json = new Json();
+
         submitSprite = new Sprite(new Texture(Gdx.files.local("submit_panel.png")));
         submitSprite.setPosition(360*0.5f-submitSprite.getWidth()*0.5f,640*0.35f);
         menuSprite = new Sprite(new Texture(Gdx.files.internal("mmenu_panel.png")));
         menuSprite.setPosition(360*0.5f-menuSprite.getWidth()*0.5f,640*0.35f-submitSprite.getHeight()-20);
 
-        highScores = json.fromJson(Highscore.class,Gdx.files.internal("scores.json"));
+
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(360,640, camera);
@@ -104,14 +104,14 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
 
     @Override
     public void dispose() {
-        Json json = new Json();
-        Gdx.files.local("scores.json").writeString(json.toJson(highScores),false);
+//        overFont.dispose();
+
     }
 
     @Override
     public void input(String text) {
         submitFlag = false;
-        highScores.add(Integer.toString(score) + " - " + text);
+        game.scores.add(score,text);
     }
 
     @Override
@@ -139,10 +139,12 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
         Vector3 input = new Vector3(screenX,screenY,0);
         camera.unproject(input);
         if (submitSprite.getBoundingRectangle().contains(input.x,input.y) && submitFlag){
+            game.touchSound.play();
             Gdx.input.getTextInput(this,"SUBMIT SCORE", "", "Your name here!");
             dispose();
         }
         else if (menuSprite.getBoundingRectangle().contains(input.x,input.y)){
+            game.touchSound.play();
             game.setScreen(new StartScreen(game));
             dispose();
         }

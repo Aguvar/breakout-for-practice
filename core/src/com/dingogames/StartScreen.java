@@ -42,7 +42,7 @@ public class StartScreen implements Screen, InputProcessor {
         scoreBtnSprite.setBounds(scoreBtnSprite.getX(), scoreBtnSprite.getY(), scoreBtnSprite.getWidth(), scoreBtnSprite.getHeight());
 
         layout = new GlyphLayout();
-        layout.setText(titleFont,"CCCCCCCC");
+        layout.setText(titleFont,"OCO");
 
         camera = new OrthographicCamera();
         camera.position.x = Gdx.graphics.getWidth()*0.5f;
@@ -69,7 +69,7 @@ public class StartScreen implements Screen, InputProcessor {
         game.batch.begin();
         playBtnSprite.draw(game.batch);
         scoreBtnSprite.draw(game.batch);
-        titleFont.draw(game.batch,"CCCCCCCC",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.9f);
+        titleFont.draw(game.batch,"OCO",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.9f);
         game.batch.end();
     }
 
@@ -118,10 +118,12 @@ public class StartScreen implements Screen, InputProcessor {
         Vector3 input = new Vector3(screenX,screenY,0);
         camera.unproject(input);
         if (playBtnSprite.getBoundingRectangle().contains(input.x,input.y)){
+            game.touchSound.play();
             game.setScreen(new PlayScreen(game));
             dispose();
         }
         else if (scoreBtnSprite.getBoundingRectangle().contains(input.x,input.y)){
+            game.touchSound.play();
             game.setScreen(new HighscoreScreen(game));
             dispose();
         }
