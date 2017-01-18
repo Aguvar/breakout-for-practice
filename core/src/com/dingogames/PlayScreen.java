@@ -237,7 +237,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         }
         game.batch.end();
 
-        renderer.render(world,camera.combined);
+        //renderer.render(world,camera.combined);
 
         checkOutOfBounds();
         if (deathFlag){

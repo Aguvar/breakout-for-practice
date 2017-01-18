@@ -29,6 +29,8 @@ public class StartScreen implements Screen, InputProcessor {
     private BitmapFont titleFont;
     private Viewport viewport;
 
+    private final String version = "v1.0";
+
     public StartScreen(BreakoutGame game) {
         this.game = game;
 
@@ -70,6 +72,7 @@ public class StartScreen implements Screen, InputProcessor {
         playBtnSprite.draw(game.batch);
         scoreBtnSprite.draw(game.batch);
         titleFont.draw(game.batch,"OCO",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.9f);
+        game.gameFont.draw(game.batch,version,0,10);
         game.batch.end();
     }
 

@@ -17,6 +17,8 @@ public class BreakoutGame extends Game {
 	Highscore scores;
 	Sound touchSound;
 
+
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
