@@ -39,16 +39,14 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
         this.game = game;
         this.score = score;
 
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(360,640, camera);
+        camera.position.set(viewport.getWorldWidth()*0.5f,viewport.getWorldHeight()*0.5f,0);
+
         submitSprite = new Sprite(new Texture(Gdx.files.local("submit_panel.png")));
         submitSprite.setPosition(360*0.5f-submitSprite.getWidth()*0.5f,640*0.35f);
         menuSprite = new Sprite(new Texture(Gdx.files.internal("mmenu_panel.png")));
         menuSprite.setPosition(360*0.5f-menuSprite.getWidth()*0.5f,640*0.35f-submitSprite.getHeight()-20);
-
-
-
-        camera = new OrthographicCamera();
-        viewport = new FitViewport(360,640, camera);
-        camera.position.set(Gdx.graphics.getWidth()*0.5f,Gdx.graphics.getHeight()*0.5f,0);
 
         overFont = new BitmapFont(Gdx.files.internal("overFont.fnt"));
         layout = new GlyphLayout(overFont,"GAME\nOVER");
@@ -115,7 +113,7 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
 
     @Override
     public void canceled() {
-
+        submitFlag = true;
     }
 
     @Override

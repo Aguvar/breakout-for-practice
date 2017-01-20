@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
@@ -61,11 +62,12 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         this.game = game;
 
         camera = new OrthographicCamera();
-        camera.position.x = Gdx.graphics.getWidth()*0.5f;
-        camera.position.y = Gdx.graphics.getHeight()*0.5f;
+        viewport = new StretchViewport(360,640,camera);
+
+        camera.position.x = viewport.getWorldWidth()*0.5f;
+        camera.position.y = viewport.getWorldHeight()*0.5f;
         camera.update();
 
-        viewport = new FitViewport(360,640,camera);
 
         ballSprite = new Sprite(new Texture(Gdx.files.local("breakoutBall.png")));
         ballSprite.setScale(0.5f);
@@ -105,7 +107,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         //Generate ball
         BodyDef ballDef = new BodyDef();
         ballDef.type = BodyDef.BodyType.DynamicBody;
-        ballDef.position.set(Gdx.graphics.getWidth()*0.5f*WtoS,Gdx.graphics.getHeight()*0.5f*WtoS);
+        ballDef.position.set(viewport.getWorldWidth()*0.5f*WtoS,viewport.getWorldHeight()*0.5f*WtoS);
 
         CircleShape ballShape = new CircleShape();
         ballShape.setRadius(ballSprite.getHeight()*0.5f*ballSprite.getScaleX()*WtoS);
@@ -125,7 +127,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         //Generate Palette
         BodyDef paletteDef = new BodyDef();
         paletteDef.type = BodyDef.BodyType.KinematicBody;
-        paletteDef.position.set(Gdx.graphics.getWidth()*0.5f*WtoS,30*WtoS);
+        paletteDef.position.set(viewport.getWorldWidth()*0.5f*WtoS,30*WtoS);
 
         PolygonShape paletteShape = new PolygonShape();
         paletteShape.setAsBox(paletteSprite.getWidth()*WtoS*0.5f,paletteSprite.getHeight()*WtoS*0.5f);
@@ -158,7 +160,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
         for (int y = 0; y < blocksY; y++) {
             for (int x = 0; x < blocksX; x++) {
-                blockDef.position.set(Gdx.graphics.getWidth()*0.2f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , Gdx.graphics.getHeight()*0.9f*WtoS + -(blockSprite.getHeight() + 5)*y*WtoS);
+                blockDef.position.set(viewport.getWorldWidth()*0.2f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , viewport.getWorldHeight()*0.9f*WtoS + -(blockSprite.getHeight() + 5)*y*WtoS);
                 blocks.get(y).add(world.createBody(blockDef));
                 blocks.get(y).get(x).createFixture(blockFix);
                 blocks.get(y).get(x).setUserData(new Vector2(x,y));
@@ -173,7 +175,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
 
         EdgeShape wallShape = new EdgeShape();
-        wallShape.set(0,0,0,Gdx.graphics.getHeight()*WtoS);
+        wallShape.set(0,0,0,viewport.getWorldHeight()*WtoS);
 
         FixtureDef wallFix = new FixtureDef();
         wallFix.shape = wallShape;
@@ -183,19 +185,19 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         walls.add(world.createBody(wallDef));
         walls.get(0).createFixture(wallFix);
 
-        wallShape.set(0,Gdx.graphics.getHeight()*WtoS,Gdx.graphics.getWidth()*WtoS,Gdx.graphics.getHeight()*WtoS);
+        wallShape.set(0,viewport.getWorldHeight()*WtoS,viewport.getWorldWidth()*WtoS,viewport.getWorldHeight()*WtoS);
         wallFix.shape = wallShape;
 
         walls.add(world.createBody(wallDef));
         walls.get(1).createFixture(wallFix);
 
-        wallShape.set(Gdx.graphics.getWidth()*WtoS,Gdx.graphics.getHeight()*WtoS,Gdx.graphics.getWidth()*WtoS,0);
+        wallShape.set(viewport.getWorldWidth()*WtoS,viewport.getWorldHeight()*WtoS,viewport.getWorldWidth()*WtoS,0);
         wallFix.shape = wallShape;
 
         walls.add(world.createBody(wallDef));
         walls.get(2).createFixture(wallFix);
 
-        wallShape.set(Gdx.graphics.getWidth()*WtoS,0,0,0);
+        wallShape.set(viewport.getWorldWidth()*WtoS,0,0,0);
         wallFix.shape = wallShape;
 
         deathWall = world.createBody(wallDef);
@@ -230,8 +232,8 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         game.batch.begin();
         drawBodies();
         layout.setText(game.gameFont,"Score: " + Integer.toString(score));
-        game.gameFont.draw(game.batch,"Lives: " + Integer.toString(lives), 20, Gdx.graphics.getHeight()-20);
-        game.gameFont.draw(game.batch,"Score: " + Integer.toString(score), 360 - layout.width - 20, Gdx.graphics.getHeight()-20);
+        game.gameFont.draw(game.batch,"Lives: " + Integer.toString(lives), 20, viewport.getWorldHeight()-20);
+        game.gameFont.draw(game.batch,"Score: " + Integer.toString(score), 360 - layout.width - 20, viewport.getWorldHeight()-20);
         if (startFlag) {
             startRound();
         }
@@ -253,15 +255,15 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
     private void startRound() {
         if (worldStep != 0){
-            ball.setTransform(Gdx.graphics.getWidth()*0.5f*WtoS,Gdx.graphics.getHeight()*0.5f*WtoS,0);
+            ball.setTransform(viewport.getWorldWidth()*0.5f*WtoS,viewport.getWorldHeight()*0.5f*WtoS,0);
             ball.setLinearVelocity(0,0);
-            palette.setTransform(Gdx.graphics.getWidth()*0.5f*WtoS,30*WtoS,0);
+            palette.setTransform(viewport.getWorldWidth()*0.5f*WtoS,30*WtoS,0);
             palette.setLinearVelocity(0,0);
             worldStep = 0;
 
         }
         layout.setText(game.gameFont, "TOUCH!");
-        game.gameFont.draw(game.batch,"TOUCH!",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.5f-30);
+        game.gameFont.draw(game.batch,"TOUCH!",viewport.getWorldWidth()*0.5f-layout.width*0.5f,viewport.getWorldHeight()*0.5f-30);
         if (Gdx.input.isTouched()){
             worldStep = 1/60f;
             ball.setLinearVelocity(MathUtils.random(-10,10),15);
@@ -288,7 +290,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
     }
 
     private void limitPalette() {
-        if ((paletteSprite.getX() < 5 && palette.getLinearVelocity().x < 0) || (paletteSprite.getX() > Gdx.graphics.getWidth() - paletteSprite.getWidth() - 5 && palette.getLinearVelocity().x > 0 )){
+        if ((paletteSprite.getX() < 5 && palette.getLinearVelocity().x < 0) || (paletteSprite.getX() > viewport.getWorldWidth() - paletteSprite.getWidth() - 5 && palette.getLinearVelocity().x > 0 )){
             palette.setLinearVelocity(0,0);
         }
     }
@@ -302,7 +304,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
                 ((Sprite) (body.getUserData())).draw(game.batch);
             }
             else if (body.getUserData() instanceof Vector2){
-//                blockDef.position.set(Gdx.graphics.getWidth()*0.3f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , Gdx.graphics.getHeight()*0.8f*WtoS + (blockSprite.getHeight() + 5)*y*WtoS);
+//                blockDef.position.set(viewport.getWorldWidth()*0.3f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , viewport.getWorldHeight()*0.8f*WtoS + (blockSprite.getHeight() + 5)*y*WtoS);
                 float x = ((Vector2) body.getUserData()).x;
                 float y = ((Vector2) body.getUserData()).y;
                 blockSprite.setPosition(blocks.get((int)y).get((int)x).getPosition().x*StoW - blockSprite.getWidth()*0.5f,blocks.get((int)y).get((int)x).getPosition().y*StoW - blockSprite.getHeight()*0.5f);
@@ -372,9 +374,9 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         if (pointer == 0) {
             Vector3 touch = new Vector3(screenX,screenY,0);
             camera.unproject(touch);
-            if (touch.x > Gdx.graphics.getWidth()*0.5f){
+            if (touch.x > viewport.getWorldWidth()*0.5f){
                 palette.setLinearVelocity(paletteSpeed*WtoS,0);
-            }else if (touch.x < Gdx.graphics.getWidth()*0.5f){
+            }else if (touch.x < viewport.getWorldWidth()*0.5f){
                 palette.setLinearVelocity(-paletteSpeed*WtoS,0);
             }
         }
@@ -387,9 +389,9 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         Vector3 touch = new Vector3(screenX,screenY,0);
         camera.unproject(touch);
-        if (touch.x > Gdx.graphics.getWidth()*0.5f && palette.getLinearVelocity().x > 0){
+        if (touch.x > viewport.getWorldWidth()*0.5f && palette.getLinearVelocity().x > 0){
             palette.setLinearVelocity(0,0);
-        }else if (touch.x < Gdx.graphics.getWidth()*0.5f && palette.getLinearVelocity().x < 0){
+        }else if (touch.x < viewport.getWorldWidth()*0.5f && palette.getLinearVelocity().x < 0){
             palette.setLinearVelocity(0,0);
         }
 

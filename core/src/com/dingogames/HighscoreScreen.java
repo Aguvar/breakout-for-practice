@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
@@ -37,10 +38,9 @@ public class HighscoreScreen implements Screen, InputProcessor {
 
 
         camera = new OrthographicCamera();
-        viewport = new FitViewport(360,640,camera);
-        camera.position.set(Gdx.graphics.getWidth()*0.5f,Gdx.graphics.getHeight()*0.5f,0);
-
-
+        viewport = new StretchViewport(360,640,camera);
+        camera.position.set(viewport.getWorldWidth()*0.5f,viewport.getWorldHeight()*0.5f,0);
+        
         scoreFont = new BitmapFont(Gdx.files.internal("scoreFont.fnt"));
         scoreTitleLayout = new GlyphLayout(scoreFont,"HIGH SCORES");
 
@@ -48,6 +48,7 @@ public class HighscoreScreen implements Screen, InputProcessor {
 
         backSprite = new Sprite(new Texture(Gdx.files.internal("back_arrow.png")));
         backSprite.setPosition(20,20);
+        backSprite.setBounds(backSprite.getX(),backSprite.getY(),backSprite.getWidth(),backSprite.getHeight());
 
         Gdx.input.setInputProcessor(this);
     }
@@ -105,7 +106,7 @@ public class HighscoreScreen implements Screen, InputProcessor {
 
     @Override
     public void dispose() {
-
+        scoreFont.dispose();
     }
 
     @Override

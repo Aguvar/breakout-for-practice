@@ -37,26 +37,29 @@ public class StartScreen implements Screen, InputProcessor {
     public StartScreen(BreakoutGame game) {
         this.game = game;
 
+        camera = new OrthographicCamera();
+        viewport = new StretchViewport(360,640,camera);
+
+        camera.position.x = viewport.getWorldWidth()*0.5f;
+        camera.position.y = viewport.getWorldHeight()*0.5f;
+
         this.titleFont = new BitmapFont(Gdx.files.local("StartFont.fnt"));
+
         playBtnSprite = new Sprite(new Texture(Gdx.files.internal("play_panel.png")));
-        playBtnSprite.setPosition(Gdx.graphics.getWidth()*0.5f- playBtnSprite.getRegionWidth()*0.5f,240);
+        playBtnSprite.setPosition(viewport.getWorldWidth()*0.5f- playBtnSprite.getRegionWidth()*0.5f,240);
         playBtnSprite.setBounds(playBtnSprite.getX(), playBtnSprite.getY(), playBtnSprite.getWidth(), playBtnSprite.getHeight());
 
         scoreBtnSprite = new Sprite(new Texture(Gdx.files.internal("score_panel.png")));
-        scoreBtnSprite.setPosition(Gdx.graphics.getWidth()*0.5f- scoreBtnSprite.getRegionWidth()*0.5f,80);
+        scoreBtnSprite.setPosition(viewport.getWorldWidth()*0.5f- scoreBtnSprite.getRegionWidth()*0.5f,80);
         scoreBtnSprite.setBounds(scoreBtnSprite.getX(), scoreBtnSprite.getY(), scoreBtnSprite.getWidth(), scoreBtnSprite.getHeight());
 
         layout = new GlyphLayout();
         layout.setText(titleFont,"OCO");
 
-        camera = new OrthographicCamera();
-        camera.position.x = Gdx.graphics.getWidth()*0.5f;
-        camera.position.y = Gdx.graphics.getHeight()*0.5f;
 
-        viewport = new StretchViewport(360,640,camera);
 
-        titleX = Gdx.graphics.getWidth()*0.5f-layout.width*0.5f;
-        titleY = Gdx.graphics.getHeight()*0.9f;
+        titleX = viewport.getWorldWidth()*0.5f-layout.width*0.5f;
+        titleY = viewport.getWorldHeight()*0.9f;
 
         Gdx.input.setInputProcessor(this);
     }
