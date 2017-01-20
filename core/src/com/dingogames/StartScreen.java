@@ -29,6 +29,9 @@ public class StartScreen implements Screen, InputProcessor {
     private BitmapFont titleFont;
     private Viewport viewport;
 
+    private float titleX;
+    private float titleY;
+
     private final String version = "v1.0";
 
     public StartScreen(BreakoutGame game) {
@@ -52,6 +55,9 @@ public class StartScreen implements Screen, InputProcessor {
 
         viewport = new StretchViewport(360,640,camera);
 
+        titleX = Gdx.graphics.getWidth()*0.5f-layout.width*0.5f;
+        titleY = Gdx.graphics.getHeight()*0.9f;
+
         Gdx.input.setInputProcessor(this);
     }
 
@@ -71,7 +77,7 @@ public class StartScreen implements Screen, InputProcessor {
         game.batch.begin();
         playBtnSprite.draw(game.batch);
         scoreBtnSprite.draw(game.batch);
-        titleFont.draw(game.batch,"OCO",Gdx.graphics.getWidth()*0.5f-layout.width*0.5f,Gdx.graphics.getHeight()*0.9f);
+        titleFont.draw(game.batch,"OCO",titleX,titleY);
         game.gameFont.draw(game.batch,version,0,10);
         game.batch.end();
     }

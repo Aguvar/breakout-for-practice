@@ -104,13 +104,12 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
 
     @Override
     public void dispose() {
-//        overFont.dispose();
+        overFont.dispose();
 
     }
 
     @Override
     public void input(String text) {
-        submitFlag = false;
         game.scores.add(score,text);
     }
 
@@ -139,9 +138,9 @@ public class GameoverScreen implements Screen, Input.TextInputListener, InputPro
         Vector3 input = new Vector3(screenX,screenY,0);
         camera.unproject(input);
         if (submitSprite.getBoundingRectangle().contains(input.x,input.y) && submitFlag){
+            submitFlag = false;
             game.touchSound.play();
             Gdx.input.getTextInput(this,"SUBMIT SCORE", "", "Your name here!");
-            dispose();
         }
         else if (menuSprite.getBoundingRectangle().contains(input.x,input.y)){
             game.touchSound.play();
