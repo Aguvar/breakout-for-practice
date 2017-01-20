@@ -68,7 +68,6 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         camera.position.y = viewport.getWorldHeight()*0.5f;
         camera.update();
 
-
         ballSprite = new Sprite(new Texture(Gdx.files.local("breakoutBall.png")));
         ballSprite.setScale(0.5f);
 

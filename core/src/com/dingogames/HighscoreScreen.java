@@ -40,7 +40,7 @@ public class HighscoreScreen implements Screen, InputProcessor {
         camera = new OrthographicCamera();
         viewport = new StretchViewport(360,640,camera);
         camera.position.set(viewport.getWorldWidth()*0.5f,viewport.getWorldHeight()*0.5f,0);
-        
+
         scoreFont = new BitmapFont(Gdx.files.internal("scoreFont.fnt"));
         scoreTitleLayout = new GlyphLayout(scoreFont,"HIGH SCORES");
 
