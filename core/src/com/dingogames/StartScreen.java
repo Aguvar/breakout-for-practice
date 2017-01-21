@@ -32,7 +32,7 @@ public class StartScreen implements Screen, InputProcessor {
     private float titleX;
     private float titleY;
 
-    private final String version = "v1.0";
+    private final String version = "v1.1";
 
     public StartScreen(BreakoutGame game) {
         this.game = game;
