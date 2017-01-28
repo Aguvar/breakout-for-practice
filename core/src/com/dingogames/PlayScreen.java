@@ -15,15 +15,19 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
+import java.util.logging.Level;
 
 /**
  * Created by Dingo on 09-Jan-17.
  */
 public class PlayScreen implements Screen, InputProcessor, ContactListener {
     private final BreakoutGame game;
+    private LevelLayout levelLayout;
     private OrthographicCamera camera;
     private Viewport viewport;
     private World world;
@@ -57,8 +61,9 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
     private Vector2 flag = new Vector2(-1,-1);
     private boolean deathFlag = false;
     private boolean startFlag = true;
+    private boolean completeFlag = false;
 
-    public PlayScreen(BreakoutGame game) {
+    public PlayScreen(BreakoutGame game, int level, int score, int lives) {
         this.game = game;
 
         camera = new OrthographicCamera();
@@ -93,8 +98,15 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         world.setContactListener(this);
         Gdx.input.setInputProcessor(this);
 
-        lives = 3;
-        score = 0;
+        this.lives = lives;
+        this.score = score;
+
+        try {
+            Json json = new Json();
+            levelLayout = json.fromJson(LevelLayout.class,Gdx.files.internal("level" + Integer.toString(level) + ".json"));
+        } catch (Exception e) {
+            levelLayout = new LevelLayout();
+        }
 
         layout = new GlyphLayout();
 
@@ -244,6 +256,11 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         if (deathFlag){
             killBall();
         }
+
+        if (completeFlag){
+            game.setScreen(new NiceScreen(game,score,1,lives));
+            dispose();
+        }
     }
 
     private void checkOutOfBounds() {
@@ -285,6 +302,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         if (flag.x != -1){
             world.destroyBody(blocks.get((int)flag.y).get((int)flag.x));
             flag = new Vector2(-1,-1);
+            checkComplete();
         }
     }
 
@@ -426,12 +444,15 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         }
         if (bodyA.getUserData() instanceof Vector2){
             flagEliminar((Vector2)bodyA.getUserData());
+
         }
         if (bodyB.getUserData() instanceof Vector2){
             flagEliminar((Vector2)bodyB.getUserData());
+
         }
         if (bodyA.equals(palette) || bodyB.equals(palette)){
             //Otro sonido
+
             paletteSound.play();
         }
         if (bodyA.equals(deathWall) || bodyB.equals(deathWall)){
@@ -446,11 +467,35 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         blockSound.play();
         score += Math.abs(ball.getLinearVelocity().x) + Math.abs(ball.getLinearVelocity().y);
         flag = blockLocation;
+
+    }
+
+    private void checkComplete() {
+        boolean complete = true;
+        for (Array<Body> row : blocks
+             ) {
+            for (Body block : row
+                    ) {
+                complete = complete && (block.getUserData() == null);
+            }
+        }
+        completeFlag = complete;
     }
 
     @Override
     public void endContact(Contact contact) {
-
+//        Fixture fixA = contact.getFixtureA();
+//        Fixture fixB = contact.getFixtureB();
+//
+//        Body bodyA = fixA.getBody();
+//        Body bodyB = fixB.getBody();
+//
+//        if (bodyA.getUserData() instanceof Vector2){
+//            checkComplete();
+//        }
+//        if (bodyB.getUserData() instanceof Vector2){
+//            checkComplete();
+//        }
     }
 
     @Override

@@ -131,7 +131,7 @@ public class StartScreen implements Screen, InputProcessor {
         camera.unproject(input);
         if (playBtnSprite.getBoundingRectangle().contains(input.x,input.y)){
             game.touchSound.play();
-            game.setScreen(new PlayScreen(game));
+            game.setScreen(new PlayScreen(game,1,0,3));
             dispose();
         }
         else if (scoreBtnSprite.getBoundingRectangle().contains(input.x,input.y)){
