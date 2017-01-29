@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonWriter;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -53,8 +54,8 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
     private final float StoW = 10f;
     //Parameters (In world units)
     private final float paletteSpeed = 300;
-    private final int blocksX = 6;
-    private final int blocksY = 6;
+    private int blocksX;
+    private int blocksY;
 
     private float worldStep = 1/60f;
 
@@ -80,6 +81,22 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
         blockSprite = new Sprite(new Texture(Gdx.files.local("breakoutBlock.png")));
 
+        try {
+            Json json = new Json();
+            levelLayout = json.fromJson(LevelLayout.class,Gdx.files.internal("level" + Integer.toString(level) + ".json"));
+        } catch (Exception e) {
+            levelLayout = new LevelLayout();
+//            Json json = new Json();
+//            json.setTypeName(null);
+//            json.setUsePrototypes(false);
+//            json.setIgnoreUnknownFields(false);
+//            json.setOutputType(JsonWriter.OutputType.json);
+//            Gdx.files.local("level1.json").writeString(json.toJson(levelLayout),false);
+        }
+
+        blocksX = levelLayout.levelX;
+        blocksY = levelLayout.levelY;
+
         //Create matrix
         blocks = new Array<Array<Body>>(blocksY);
         for (int i = 0; i < blocksY; i++) {
@@ -101,12 +118,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         this.lives = lives;
         this.score = score;
 
-        try {
-            Json json = new Json();
-            levelLayout = json.fromJson(LevelLayout.class,Gdx.files.internal("level" + Integer.toString(level) + ".json"));
-        } catch (Exception e) {
-            levelLayout = new LevelLayout();
-        }
+
 
         layout = new GlyphLayout();
 
@@ -171,10 +183,14 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
         for (int y = 0; y < blocksY; y++) {
             for (int x = 0; x < blocksX; x++) {
-                blockDef.position.set(viewport.getWorldWidth()*0.2f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , viewport.getWorldHeight()*0.9f*WtoS + -(blockSprite.getHeight() + 5)*y*WtoS);
-                blocks.get(y).add(world.createBody(blockDef));
-                blocks.get(y).get(x).createFixture(blockFix);
-                blocks.get(y).get(x).setUserData(new Vector2(x,y));
+                if (levelLayout.layout[y][x]) {
+                    blockDef.position.set(viewport.getWorldWidth()*0.2f*WtoS + (blockSprite.getWidth() + 5)*x*WtoS , viewport.getWorldHeight()*0.9f*WtoS + -(blockSprite.getHeight() + 5)*y*WtoS);
+                    blocks.get(y).add(world.createBody(blockDef));
+                    blocks.get(y).get(x).createFixture(blockFix);
+                    blocks.get(y).get(x).setUserData(new Vector2(x,y));
+                }else{
+                    blocks.get(y).add(null);
+                }
             }
         }
 
@@ -476,7 +492,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
              ) {
             for (Body block : row
                     ) {
-                complete = complete && (block.getUserData() == null);
+                complete = complete && (block == null || (block.getUserData() == null));
             }
         }
         completeFlag = complete;
