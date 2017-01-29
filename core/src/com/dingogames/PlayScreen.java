@@ -92,6 +92,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 //            json.setIgnoreUnknownFields(false);
 //            json.setOutputType(JsonWriter.OutputType.json);
 //            Gdx.files.local("level1.json").writeString(json.toJson(levelLayout),false);
+
         }
 
         blocksX = levelLayout.levelX;
@@ -248,7 +249,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         limitPalette();
-        world.step(worldStep,6,2);
+        world.step(worldStep,10,10);
         eliminarBloques();
 
 
@@ -256,6 +257,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
 
         camera.update();
         game.batch.setProjectionMatrix(camera.combined);
+
         game.batch.begin();
         drawBodies();
         layout.setText(game.gameFont,"Score: " + Integer.toString(score));
@@ -269,6 +271,7 @@ public class PlayScreen implements Screen, InputProcessor, ContactListener {
         //renderer.render(world,camera.combined);
 
         checkOutOfBounds();
+
         if (deathFlag){
             killBall();
         }

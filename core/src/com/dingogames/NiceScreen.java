@@ -2,6 +2,7 @@ package com.dingogames;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -22,6 +23,7 @@ public class NiceScreen implements Screen {
     private int nextLevel;
     private int currentLives;
     private GlyphLayout layout;
+    private Sound niceSound;
 
     public NiceScreen(final BreakoutGame game, final int score, int currentLevel, final int currentLives) {
         this.game = game;
@@ -42,6 +44,8 @@ public class NiceScreen implements Screen {
             }
         },2);
 
+        niceSound = Gdx.audio.newSound(Gdx.files.local("Nice.wav"));
+        niceSound.play();
     }
 
     @Override
